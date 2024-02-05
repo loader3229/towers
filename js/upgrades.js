@@ -7,7 +7,8 @@ function isUpgPriced(data) {
         (data.costType != "loot" || !game.upgrades.b4_1) && 
         (data.costType != "bricks" || !game.upgrades.k3_3) && 
         (data.costType != "mana" || !game.upgrades.k3_13) && 
-        (data.costType != "karma" || !game.upgrades.k3_15);
+        (data.costType != "karma" || !game.upgrades.k3_15)&& 
+        (data.costType != "power");
 }
 
 function makeUpgGUI (type) {
@@ -170,7 +171,7 @@ function buyMax(upg, update = true) {
 function buyMaxType(type) {
     for (let upg in upgrades) {
         let data = upgrades[upg];
-        if (data.costType == type) buyMax(upg, false);
+        if (data.costType == type && (!data.req || hasUpg(data.req[0], data.req[1]))) buyMax(upg, false);
     }
     if (currentTab == "upgrades" && tabSubtabs.upgrades == type) updateUpgGUI();
 }

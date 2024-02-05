@@ -1,11 +1,11 @@
 let spells = {
-    fire: {
+    /*fire: {
         title: "Spell of Fire",
         desc: "Embrace the rage of Fire, making the \"Karma to Power\" and \"Karma to Loot to Fame\" effect to Fame 2× better for the next {DUR} levels.",
         duration() { return 10; },
         cooldown() { return upgEffect("e2_4"); },
         cost() { return EN(50).mul(EN.pow(1.1, game.upgrades.e2)).mul(EN.pow(1.2, game.upgrades.e2_4)) },
-    },
+    }, */
     ice: {
         title: "Spell of Ice",
         desc: "Freeze all enemies with Ice, making them unable to attack and can be absorbed regardless of their Power for the next {DUR} levels.",

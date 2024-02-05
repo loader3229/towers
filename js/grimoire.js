@@ -35,7 +35,7 @@ function updateRitualGUI () {
             btn.innerHTML = `
                 <div>${data.title}</div>
                 <div></div>
-                <div>${data.gainText ? data.gainText(gain) : "+" + format(gain, 0)}${gain.gte(1000) || !next ? "" : "<br/>Next at " + format(next)}</div>
+                <div>${data.gainText ? data.gainText(gain) : "+" + format(gain, 0)}${data.invText ? data.invText(next) : (gain.gte(1000) || !next ? "" : "<br/>Next at " + format(next))}</div>
             `;
         } else {
             btn.style.display = "none";

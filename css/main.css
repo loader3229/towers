@@ -116,6 +116,30 @@ a:active {
     transition: top  1s linear, opacity 1s linear;
 }
 
+#rankbox {
+    background: #00000099;
+    border-color: #999999;
+
+}
+
+#rankbox::before {
+    position: absolute;
+    left: 5px;
+    content: "Rank";
+}
+
+#powerbox {
+    background: #00cf00df;
+    border-color: #7fff7f;
+
+}
+
+#powerbox::before {
+    position: absolute;
+    left: 5px;
+    content: "Power";
+}
+
 #famebox {
     background: #1f1f7fdf;
     border-color: #7f7fff;

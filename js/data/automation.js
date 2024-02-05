@@ -23,4 +23,9 @@ let autos = {
         title: "Spell of Wind",
         req: ["m2"],
     },
+    lootGenSwitch: {
+        title: "Loot Generation",
+        req: ["l3_12"],
+		sw: true,
+    },
 }

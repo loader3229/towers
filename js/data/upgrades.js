@@ -3,12 +3,19 @@ let upgrades = {
         category: "Fame",
         title: "Fame Multiplier",
         desc: "Increase Fame gain by ×2, compounding.",
-        disp(x) { return "×" + format(this.effect(x), 0); },
+        disp(x) { let ret="×" + format(this.effect(x), 0);
+return ret + ((this.effect(x).gte(1e40) && upgEffect("l3_3").lt(1))?" (softcapped)":"")		},
         max: EN("ee1000"),
         costType: "points",
         cost(x) { return EN(1500).mul(EN.pow(3, x.pow(1.2))); },
         inv(x) { return x.div(1500).logBase(3).root(1.2).floor().max(-1); },
-        effect(x) { return EN.pow(2, x); },
+        effect(x) { 
+		let ret=0;
+		if (game.upgrades.f1_3)ret=EN.pow(2, x.add(upgEffect("f1_3")));
+		else ret=EN.pow(2, x);
+		if(ret.gte(1e40))ret=EN.pow(10,ret.log10().div(40).pow(upgEffect("l3_3").add(1).mul(0.5)).mul(40));
+		return ret;
+		},
     },
     "f1_1": {
         category: "Fame",
@@ -19,12 +26,15 @@ let upgrades = {
         costType: "points",
         cost(x) { return EN(500).pow(EN.pow(1.12, x)).mul(10); },
         inv(x) { return x.div(10).logBase(500).logBase(1.12).floor().max(-1); },
-        effect(x) { return EN.mul(0.05, x).add(1); },
+        effect(x) { 
+		if (game.upgrades.f1_4)return EN.mul(upgEffect("f1_4").add(0.05), x).add(1);
+		return EN.mul(0.05, x).add(1); 
+		},
     },
     "f1_2": {
         category: "Fame",
         title: "Fame Exponent II",
-        desc: "Increase Power in Fame gain formula by ^+0.05.",
+        desc: "Increase Power in Fame gain formula by ^+0.01.",
         req: ["f2", 30],
         tease: "Unlocks at Realm Level 31",
         teaseReq: ["f2", 6],
@@ -33,7 +43,73 @@ let upgrades = {
         costType: "points",
         cost(x) { return EN(1e15).pow(EN.pow(1.12, x)).mul(1e18); },
         inv(x) { return x.div(1e18).logBase(1e15).logBase(1.12).floor().max(-1); },
-        effect(x) { return EN.mul(0.05, x).add(1); },
+        effect(x) { 
+		
+		if(game.upgrades.pow13){
+			return EN.mul(0.05, x).add(1);
+		}
+		if(game.upgrades.pow12){
+			return EN.mul(0.04, x).add(1);
+		}
+		if(game.upgrades.pow4){
+			return EN.mul(0.02, x).add(1);
+		}
+		return EN.mul(0.01, x).add(1); },
+    },
+    "f1_3": {
+        category: "Fame",
+        title: "Realm Level to Fame Multiplier",
+        desc: "Realm Level affects Fame Multiplier.",
+        isBool: true,
+        req: ["f2", 24],
+        tease: "Unlocks at Realm Level 25",
+        teaseReq: ["f2", 6],
+        disp(x) { return "+" + format(this.effect(x), 2) + " levels"; },
+        costType: "points",
+        cost(x) { return EN(1e25) },
+        effect(x) { 
+		
+		if(game.upgrades.f1_5){
+			return game.upgrades.f2.mul(EN.pow(1.03,game.upgrades.f2));
+		}
+		return game.upgrades.f2.div(10); },
+    },
+    "f1_4": {
+        category: "Fame",
+        title: "Realm Level to Fame Exponent",
+        desc: "Realm Level affects Fame Exponent.",
+        isBool: true,
+        req: ["f2", 34],
+        tease: "Unlocks at Realm Level 35",
+        teaseReq: ["f2", 24],
+        disp(x) { return "+" + format(this.effect(x), 4) + " to base"; },
+        costType: "points",
+        cost(x) { return EN(1e50) },
+        effect(x) { return game.upgrades.f2.pow(game.upgrades.f1_6?2.05:2).mul(1e-5); },
+    },
+    "f1_5": {
+        category: "Fame",
+        title: "Realm Level to Fame Multiplier boost",
+        desc: "'Realm Level to Fame Multiplier' is better",
+        isBool: true,
+        req: ["f2", 99],
+        tease: "Unlocks at Realm Level 100",
+        teaseReq: ["l3"],
+        disp(x) { return ""; },
+        costType: "points",
+        cost(x) { return EN.pow(10,1e4) },
+    },
+    "f1_6": {
+        category: "Fame",
+        title: "Realm Level to Fame Exponent boost",
+        desc: "'Realm Level to Fame Exponent' is better",
+        isBool: true,
+        req: ["f2", 104],
+        tease: "Unlocks at Realm Level 105",
+        teaseReq: ["l3"],
+        disp(x) { return ""; },
+        costType: "points",
+        cost(x) { return EN.pow(10,6e5) },
     },
     "f2": {
         category: "Realm",
@@ -45,16 +121,29 @@ let upgrades = {
         inv(x) { return x.slog(2500).sub(1).mul(100).floor().max(-1); },
     },
     "f2_1": {
-        category: "Realm",
-        title: "Starting Power",
-        desc: "Increase your Power at the start of each level by +2.",
+        category: "Abilities",
+        title: "Power Multiplier",
+        desc: "When you complete a level, multiply your power.",
         req: ["f2", 6],
         tease: "Unlocks at Realm Level 7",
-        disp(x) { return format(this.effect(x), 0); },
+        disp(x) {
+			let ret="×" + format(this.effect(x), 0);
+			if(game.upgrades.pow7) ret = ret+ " (^"+format(this.effect(x).log10().div(game.power.log10()).add(1), 4)+")";
+			return ret;
+		},
         costType: "points",
         cost(x) { return EN(100000).mul(EN.pow(1.5, x)); },
         inv(x) { return x.div(100000).logBase(1.5).floor().max(-1); },
-        effect(x) { return x.mul(2).add(10); },
+        effect(x) { 
+		
+		if(game.upgrades.pow7){
+			return x.mul(upgEffect("pow1")).mul(upgEffect("pow7")).add(1).pow(game.misc.powerRitual);
+		}
+		if(game.upgrades.pow1){
+			return x.mul(upgEffect("pow1")).add(1).pow(game.misc.powerRitual);
+		}
+		return x.mul(1).add(1).pow(game.misc.powerRitual); 
+		},
     },
     "f2_2": {
         category: "Realm",
@@ -68,7 +157,8 @@ let upgrades = {
         costType: "points",
         cost(x) { return EN(1e9).pow(EN.pow(1.12, x)).mul(1e24); },
         inv(x) { return x.div(1e24).logBase(1e9).logBase(1.12).floor().max(-1); },
-        effect(x) { return x.mul(0.01).add(.5); },
+        effect(x) { 
+		return x.mul(0.01).add(.5); },
     },
     "f2_3": {
         category: "Realm",
@@ -82,17 +172,50 @@ let upgrades = {
         costType: "points",
         cost(x) { return EN(1e30).pow(EN.pow(1.14, x)).mul(1e150); },
         inv(x) { return x.div(1e150).logBase(1e30).logBase(1.14).floor().max(-1); },
-        effect(x) { return EN.mul(0.0025, x); },
+        effect(x) { return EN.mul(0.0025, x).add(upgEffect("l3_11")); },
         onBuy() {
             lootbox.classList.remove("hidden");
         },
+    },
+    "fg": {
+        category: "Abilities",
+        title: "Googologist",
+        desc: "Unlock Power upgrades. They don't actually cost your power.",
+        isBool: true,
+        req: ["f2", 6],
+        disp(x) { return ""; },
+        costType: "points",
+        cost(x) { return EN(1e8) },
+    },
+    "fk": {
+        category: "Abilities",
+        title: "Killing Spree",
+        desc: "Gain 1% of fame gain when you kill an enemy.",
+        isBool: true,
+        req: ["f2", 41],
+        tease: "Unlocks at Realm Level 42",
+        teaseReq: ["f2", 30],
+        disp(x) { return ""; },
+        costType: "points",
+        cost(x) { return EN(1e100) },
+    },
+    "fl": {
+        category: "Abilities",
+        title: "Looting Spree",
+        desc: "Gain 100% of fame gain and activate Power Multiplier when you gain loot.",
+        isBool: true,
+        req: ["f2", 107],
+        tease: "Unlocks at Realm Level 108",
+        teaseReq: ["fk"],
+        disp(x) { return ""; },
+        costType: "points",
+        cost(x) { return EN("e2e6") },
     },
     "f3": {
         category: "Loot",
         title: "Fame to Loot",
         desc: "Increase Loot gain by ×+0.5, additively.",
         req: ["f2_3", 1],
-        max: EN(998),
         disp(x) { return "×" + format(this.effect(x), 1); },
         costType: "points",
         cost(x) { return EN("e500").mul(EN.pow(1e10, x.pow(1.25))); },
@@ -104,30 +227,348 @@ let upgrades = {
         title: "Fame Exp. to Loot",
         desc: "Fame Exponent multiplies Loot gain.",
         isBool: true,
-        req: ["f2", 117],
-        tease: "Unlocks at Realm Level 118",
+        req: ["f2", 102],
+        tease: "Unlocks at Realm Level 103",
         teaseReq: ["l3"],
         disp(x) { return ""; },
         costType: "points",
-        cost(x) { return EN("ee13"); },
+        cost(x) { return EN("e20000"); },
     },
     "f3_2": {
         category: "Loot",
         title: "Fame Exp. II to Loot",
         desc: "Fame Exponent II multiplies Loot gain.",
-        req: ["f2", 117],
+        req: ["f2", 102],
         isBool: true,
         disp(x) { return ""; },
         costType: "points",
-        cost(x) { return EN("ee50"); },
+        cost(x) { return EN("e30000"); },
+    },
+    "f4": {
+        category: "Bricks",
+        title: "Fame to Brick",
+        desc: "Increase Bricks gain by ×+0.5, additively.",
+        req: ["f3", 9998],
+        tease: "Reach ×5000 of 'Fame to Loot' effect",
+        teaseReq: ["l3_4"],
+        max: EN(9998),
+        disp(x) { return "×" + format(this.effect(x), 1); },
+        costType: "points",
+        cost(x) { return EN.pow("e500000", EN.pow(2, EN.pow(1.02, x))); },
+        inv(x) { return x.logBase("e500000").logBase(2).logBase(1.02).floor().max(-1); },
+        effect(x) { return x.mul(0.5).add(1); },
     },
 
     
+    "pow1": {
+        category: "Power milestone",
+        title: "Googol",
+        desc: "Boost base fame gain and Power Multiplier based on your power.",
+        isBool: true,
+        req: ["fg"],
+        disp(x) { let ret="×" + format(this.effect(x), 2);
+return ret + (this.effect(x).gte("1e10000")?" (softcapped^4)":this.effect(x).gte(EN.tetr(5,3))?" (softcapped^3)":this.effect(x).gte(1e100)?" (softcapped^2)":this.effect(x).gte(1e4)?" (softcapped)":"") },
+        costType: "power",
+        cost(x) { return EN.pow(10,100) },
+        effect(x) { 
+		let ret=game.power.max(1).log10().max(100).div(100).pow(1.5);
+		if(game.upgrades.pow2){
+			ret=ret.mul(game.power.max(1).log10().max(250).div(250).pow(1.5));
+		}
+		if(game.upgrades.pow10){
+			ret=ret.mul(game.power.max(1).log10().max(250).div(250).pow(10));
+		}
+		if(game.upgrades.pow9){
+			if(ret.gte(1e5))ret=ret.log10().pow(3).mul(800);
+		}else if(ret.gte(1e4))ret=ret.log10().pow(2).mul(625);
+		if(ret.gte(1e100))ret=ret.log10().pow(50);
+		if(ret.gte(EN.tetr(5,3)))ret=EN.pow(5,ret.slog(5).div(3).mul(3125));
+		if(ret.gte("1e10000"))ret=ret.log10().pow(2500);
+		return ret;
+		},
+    },
+	
+    "pow2": {
+        category: "Power milestone",
+        title: "'Infinity' in Antimatter Dimensions",
+        desc: "'Googol' is better.",
+        isBool: true,
+        req: ["pow1"],
+        disp(x) { return ""; },
+        costType: "power",
+        cost(x) { return EN.pow(2,1024) },
+    },
+	
+    "pow3": {
+        category: "Power milestone",
+        title: "Ducentillion",
+        desc: "'Googol' affects loot gain.",
+        isBool: true,
+        req: ["pow2"],
+        disp(x) { return ""; },
+        costType: "power",
+        cost(x) { return EN.pow(10,603) },
+    },
+	
+    "pow4": {
+        category: "Power milestone",
+        title: "Googolchime",
+        desc: "'Fame Exponent II' is 2x stronger.",
+        isBool: true,
+        req: ["pow3"],
+        disp(x) { return ""; },
+        costType: "power",
+        cost(x) { return EN.pow(10,1000) },
+    },
+	
+    "pow5": {
+        category: "Power milestone",
+        title: "Millillion",
+        desc: "Your power boost base fame gain",
+        isBool: true,
+        req: ["pow4"],
+        disp(x) { let ret="×" + format(this.effect(x), 2);
+return ret + (this.effect(x).gte("ee10")?" (hardcapped)":this.effect(x).gte(1e100)?" (softcapped)":"") },
+        costType: "power",
+        cost(x) { return EN.pow(10,3003) },
+        effect(x) { 
+		let ret=game.power.max(1).log10().max(2000).div(2000).pow(2);
+		if(game.upgrades.pow6)ret=ret.pow(2.5);
+		if(ret.gte(1e100))ret=ret.log10().pow(50).min("ee10");
+		return ret;
+		},
+    },
+	
+    "pow6": {
+        category: "Power milestone",
+        title: "Myrillion",
+        desc: "'Millillion' is better.",
+        isBool: true,
+        req: ["pow5"],
+        disp(x) { return ""; },
+        costType: "power",
+        cost(x) { return EN.pow(10,30003) },
+    },
+	
+    "pow7": {
+        category: "Power milestone",
+        title: "Micrillion",
+        desc: "Your power boost Power Multiplier.",
+        isBool: true,
+        req: ["pow6"],
+        disp(x) { let ret="×" + format(this.effect(x), 2) + " (^"+format(this.effect(x).log10().div(game.power.log10()).add(1), 4)+")";return ret;},
+        costType: "power",
+        cost(x) { return EN.pow(10,3000003) },
+        effect(x) { 
+		let ret=game.power.pow(EN.pow(game.power.max(1e10).log10().log10(),game.upgrades.pow12?.75:.5).mul(0.02));
+		if(game.upgrades.pow8)ret=ret.pow(upgEffect("pow8"));
+		return ret;
+		},
+    },
+	
+    "pow8": {
+        category: "Power milestone",
+        title: "Trialogue",
+        desc: "Power Multiplier level boost 'Micrillion'.",
+        isBool: true,
+        req: ["pow7"],
+        disp(x) { let ret="^" + format(this.effect(x), 4);
+return ret;},
+        costType: "power",
+        cost(x) { return EN.pow(10,1e10) },
+        effect(x) { 
+		let ret=game.upgrades.f2_1.add(10).log10().sqrt();
+		if(game.upgrades.pow18)ret=game.upgrades.f2_1;
+		return ret;
+		},
+    },
+	
+    "pow9": {
+        category: "Power milestone",
+        title: "Limit of Decimal.js",
+        desc: "The softcap of 'Googol' is softer.",
+        isBool: true,
+        req: ["pow8"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,9e15) },
+    },
+	
+    "pow10": {
+        category: "Power milestone",
+        title: "Googolplex",
+        desc: "'Googol' is better.",
+        isBool: true,
+        req: ["pow9"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,1e100) },
+    },
+	
+    "pow11": {
+        category: "Power milestone",
+        title: "Limit of logarithmica_numerus_lite.js",
+        desc: "'Brick Power II' is better.",
+        isBool: true,
+        req: ["pow10"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,EN.pow(2,1024)) },
+    },
+	
+    "pow12": {
+        category: "Power milestone",
+        title: "Googolplexichime",
+        desc: "'Fame Exponent II' is 2x stronger, and 'Micrillion' is better.",
+        isBool: true,
+        req: ["pow11"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,EN.pow(10,1000)) },
+    },
+	
+    "pow13": {
+        category: "Power milestone",
+        title: "Googolplexitoll",
+        desc: "'Fame Exponent II' is 1.25x stronger, and Power Ritual multiply loot gain.",
+        isBool: true,
+        req: ["pow12"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,EN.pow(10,1e4)) },
+    },
+	
+    "pow14": {
+        category: "Power milestone",
+        title: "Googolplexigong",
+        desc: "'Softcap Weaker' is 2x stronger, and Power Ritual multiply brick gain.",
+        isBool: true,
+        req: ["pow13"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,EN.pow(10,1e5)) },
+    },
+	
+    "pow15": {
+        category: "Power milestone",
+        title: "Millionduplex",
+        desc: "Absorb Bonus II is better, and Fame Ritual multiply brick gain.",
+        isBool: true,
+        req: ["pow14"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.pow(10,EN.pow(10,1e6)) },
+    },
+	
+    "pow16": {
+        category: "Power milestone",
+        title: "Tetralogue",
+        desc: "Your power boost Karma gain.",
+        isBool: true,
+        req: ["pow15"],
+        disp(x) { let ret="×" + format(this.effect(x), 4);return ret;},
+        costType: "power",
+        cost(x) { return EN.pow(10,EN.pow(10,1e10)) },
+        effect(x) { 
+			let ret=game.power.max(10).slog();
+			if(game.upgrades.pow18)ret=ret.pow(1.5);
+			return ret;
+		},
+    },
+	
+    "pow17": {
+        category: "Power milestone",
+        title: "Pentalogue",
+        desc: "Your power boost Mana gain.",
+        isBool: true,
+        req: ["pow16"],
+        disp(x) { let ret="×" + format(this.effect(x), 4);return ret;},
+        costType: "power",
+        cost(x) { return EN.tetr(10,5) },
+        effect(x) { 
+			let ret=game.power.max(10).slog();
+			if(game.upgrades.pow18)ret=ret.pow(1.2);
+			return ret;
+		},
+    },
+	
+    "pow18": {
+        category: "Power milestone",
+        title: "Decker",
+        desc: "'Trialogue', 'Tetralogue' and 'Pentalogue' are better.",
+        isBool: true,
+        req: ["pow17"],
+        disp(x) { return "";},
+        costType: "power",
+        cost(x) { return EN.tetr(10,10) },
+    },
+	
+    "pow19": {
+        category: "Power milestone",
+        title: "Giggol",
+        desc: "Square root Realm Compressor, but multiply Karma gain based on Realm Compressor effect.",
+        isBool: true,
+        req: ["pow18"],
+        disp(x) { let ret="×" + format(this.effect(x), 4);return ret;},
+        costType: "power",
+        cost(x) { return EN.tetr(10,100) },
+        effect(x) { 
+			let ret=upgEffect("b4_4");
+			if(!game.upgrades.pow19)ret=ret.sqrt();
+			return ret.pow(game.upgrades.pow20?2:0.5);
+		},
+    },
+	
+    "pow20": {
+        category: "Power milestone",
+        title: "Chilialogue",
+        desc: "Square root Realm Compressor again, but 'Giggol' is better.",
+        isBool: true,
+        req: ["pow19"],
+        disp(x) { let ret="";return ret;},
+        costType: "power",
+        cost(x) { return EN.tetr(10,1000) },
+    },
+	
+    "pow21": {
+        category: "Power milestone",
+        title: "Tritri",
+        desc: "Killing Spree II uses multiplication.",
+        isBool: true,
+        req: ["pow20"],
+        disp(x) { let ret="";return ret;},
+        costType: "power",
+        cost(x) { return EN.tetr(3,EN.tetr(3,3)) },
+    },
+    "pow22": {
+        category: "Power milestone",
+        title: "Sedeniadalogue",
+        desc: "Your power boost elemite gain.",
+        isBool: true,
+        req: ["pow21"],
+        disp(x) { let ret="×" + format(this.effect(x), 4);return ret;},
+        costType: "power",
+        cost(x) { return EN.tetr(10,1e16) },
+        effect(x) { 
+			let ret=game.power.max(10).slog().add(1).log10().pow(3).div(100).add(1);
+			return ret;
+		},
+    },
+    "pow23": {
+        category: "Power milestone",
+        title: "Guppylogue",
+        desc: "When you killed an enemy, gain 1% of Mana & Elemite Ritual gain.",
+        isBool: true,
+        req: ["pow22"],
+        disp(x) { let ret="";return ret;},
+        costType: "power",
+        cost(x) { return EN.tetr(10,1e20) },
+    },
+	
     "l1": {
         category: "Fame",
         title: "Loot to Fame",
         desc: "Increase Fame gain by ×5, before Fame Exponent.",
-        max: EN(150),
         disp(x) { return "×" + format(this.effect(x), 0); },
         costType: "loot",
         cost(x) { return EN(10).mul(EN.pow(1.5, x)); },
@@ -138,7 +579,6 @@ let upgrades = {
         category: "Fame",
         title: "Loot to Fame II",
         desc: "Increase Fame gain by ^+0.01, additively.",
-        max: EN(80),
         disp(x) { return "^" + format(this.effect(x)); },
         costType: "loot",
         cost(x) { return EN(1000).mul(EN.pow(2, x)); },
@@ -150,11 +590,11 @@ let upgrades = {
         title: "Loot Multiplier",
         desc: "Increase amount of Loot that can be spawned by ×2.",
         max: EN("10^^9"),
-        disp(x) { return "×" + format(this.effect(x), 0); },
+        disp(x) { return "×" + format(this.effect(x), 0) + (this.effect(x).gte("10^^3") ?" (softcapped)":""); },
         costType: "loot",
         cost(x) { return EN(100).mul(EN.pow(4, x)); },
         inv(x) { return x.div(100).logBase(4).floor().max(-1); },
-        effect(x) { return EN.pow(2, x); },
+        effect(x) { if(EN.pow(2, x).gte("10^^3"))return EN.pow(10,EN.pow(10,EN.pow(2, x).log10().log10().mul(0.95).add(0.5)));return EN.pow(2, x); },
     },
     "l2_1": {
         category: "Loot",
@@ -166,7 +606,7 @@ let upgrades = {
         costType: "loot",
         cost(x) { return EN(10000000).mul(EN.pow(1.25, x)); },
         inv(x) { return x.div(10000000).logBase(1.25).floor().max(-1); },
-        effect(x) { return EN.mul(10, x).add(100); },
+        effect(x) { return EN.mul(10, x).add(100).tetr(upgEffect("k1_1")).pow(game.misc.lootRitual); },
     },
     "l2_2": {
         category: "Loot",
@@ -193,49 +633,48 @@ let upgrades = {
         category: "Abilities",
         title: "Absorb Bonus",
         desc: "Gain an extra ^x of enemies' Power when killed.",
-        max: EN(100),
         req: ["l3"],
-        disp(x) { return "^" + format(this.effect(x)); },
+        disp(x) { return "^" + format(this.effect(x),4); },
         costType: "loot",
-        cost(x) { return EN(2500000).mul(EN.pow(1.2, x)); },
-        inv(x) { return x.div(2500000).logBase(1.2).floor().max(-1); },
-        effect(x) { return EN.mul(0.02, x); },
+        cost(x) { return EN(1e7).mul(EN.pow(2, x)); },
+        inv(x) { return x.div(1e7).logBase(2).floor().max(-1); },
+        effect(x) { return EN.mul(0.01, x.pow(game.upgrades.l3_10?1.25:0.5)).mul(game.misc.powerRitual); },
     },
     "l3_2": {
         category: "Abilities",
         title: "Enemy Absorb Factor",
         desc: "x% of Absorb Bonus affect Enemy Growth Factor.",
-        max: EN(99),
+        max: EN(9900),
         req: ["l3"],
-        disp(x) { return format(this.effect(x).mul(100), 0) + "%"; },
+        disp(x) { return format(this.effect(x).mul(100), 2) + "%"; },
         costType: "loot",
-        cost(x) { return EN(50000000).mul(EN.pow(1.4, x)); },
-        inv(x) { return x.div(50000000).logBase(1.4).floor().max(-1); },
-        effect(x) { return EN.mul(0.01, x); },
+        cost(x) { return EN(1e8).mul(EN.pow(3, x)); },
+        inv(x) { return x.div(1e8).logBase(3).floor().max(-1); },
+        effect(x) { return EN.mul(0.01, x.sqrt()).pow(game.upgrades.l3_9?0.5:1).div(game.upgrades.l3_10?2:1); },
     },
     "l3_3": {
         category: "Fame",
-        title: "Fame Duplicator",
-        desc: "^x of Loot gain multiplies your current Fame.",
-        max: EN(100),
+        title: "Softcap Weaker",
+        desc: "Reduce the effect of softcap of 'Fame Multiplier'.",
+        max: EN(50),
         req: ["l3"],
-        disp(x) { return "^" + format(this.effect(x)); },
+        disp(x) { return format(this.effect(x).mul(100))+"% weaker"; },
         costType: "loot",
-        cost(x) { return EN(1e9).mul(EN.pow(1.4, x)); },
-        inv(x) { return x.div(1e9).logBase(1.4).floor().max(-1); },
-        effect(x) { return EN.mul(0.2, x).pow(x.max(10).sub(9.5).mul(2)); },
+        cost(x) { return EN(1e50).pow(EN.pow(1.2, x)); },
+        inv(x) { return x.logBase(1e50).logBase(1.2).floor().max(-1); },
+        effect(x) { return EN.mul(game.upgrades.pow14?0.02:0.01, x); },
     },
     "l3_4": {
         category: "Abilities",
         title: "Bulldozer",
         desc: "Unlock Bricks. You gain Bricks per tower cell when you complete a level.",
-        req: ["f2", 151],
-        tease: "Unlocks at Realm Level 152",
-        teaseReq: ["f2", 116],
+        req: ["f2", 102],
+        tease: "Unlocks at Realm Level 103",
+        teaseReq: ["l3"],
         isBool: true,
         disp(x) { return ""; },
         costType: "loot",
-        cost(x) { return EN(1e20); },
+        cost(x) { return EN(1e25); },
         onBuy() {
             brickbox.classList.remove("hidden");
         },
@@ -258,29 +697,135 @@ let upgrades = {
         isBool: true,
         disp(x) { return ""; },
         costType: "loot",
-        cost(x) { return EN(1e150); },
+        cost(x) { return EN(1e250); },
     },
     "l3_7": {
         category: "Abilities",
         title: "Absorb Operator Up",
-        desc: "Absorbing multiplies your Fame instead of added.",
+        desc: "Absorbing multiplies your Power instead of added.",
+        req: ["l3_4"],
+        isBool: true,
+        disp(x) { return ""; },
+        costType: "loot",
+        cost(x) { return EN(1e45); },
+    },
+    "l3_8": {
+        category: "Realm",
+        title: "Enemy Growth Factor II",
+        desc: "Make enemies scale faster by ^+0.01.",
+        req: ["l3_7"],
+        max: EN(100),
+        disp(x) { return "^" + format(this.effect(x).add(1)); },
+        costType: "loot",
+        cost(x) { return EN(10).pow(EN.pow(1.12, x)).mul(1e49); },
+        inv(x) { return x.div(1e49).logBase(10).logBase(1.12).floor().max(-1); },
+        effect(x) { return x.mul(0.01); },
+    },
+    "l3_9": {
+        category: "Abilities",
+        title: "Enemy Absorb Factor Boost",
+        desc: "Enemy Absorb Factor is better, and Absorb Bonus II affects Enemy Absorb Factor.",
+        req: ["b4"],
+        isBool: true,
+        disp(x) { return ""; },
+        costType: "loot",
+        cost(x) { return EN(1e100); },
+    },
+    "l3_10": {
+        category: "Abilities",
+        title: "Absorb Bonus Boost",
+        desc: "Absorb Bonus is better, but divide Enemy Absorb Factor by 2.",
+        req: ["l3_9"],
+        isBool: true,
+        disp(x) { return ""; },
+        costType: "loot",
+        cost(x) { return EN(1e115); },
+    },
+    "l3_11": {
+        category: "Abilities",
+        title: "Additional Loot Chance",
+        desc: "Add x% to Loot Chance.",
+        req: ["fl"],
+        max: EN(90),
+        disp(x) { return "+"+format(this.effect(x).mul(100)) + "%"; },
+        costType: "loot",
+        cost(x) { return EN.pow(10, x).mul(1e100); },
+        inv(x) { return x.div(1e100).logBase(10).floor().max(-1); },
+        effect(x) { return EN.mul(0.01, x); },
+    },
+    "l3_12": {
+        category: "Abilities",
+        title: "Loot Generation Switch",
+        desc: "You can disable loot generation.",
+        req: ["l3_11", 90],
+        tease: "Max out Additional Loot Chance",
+        teaseReq: ["l3_11", 1],
+        isBool: true,
+        disp(x) { return ""; },
+        costType: "loot",
+        cost(x) { return EN(1e200); },
+        onBuy(x) { game.auto.lootGenSwitch = true; }
+    },
+    "l3_13": {
+        category: "Abilities",
+        title: "Level Generator",
+        desc: "Unlock Level Generator, in the Ritual.",
+        req: ["l3_11", 90],
+        isBool: true,
+        disp(x) { return ""; },
+        costType: "loot",
+        cost(x) { return EN(1e200); },
+    },
+    "l3_14": {
+        category: "Abilities",
+        title: "Fame Operator Up S",
+        desc: "Fame gained from Killing Spree and Looting Spree are multiplied instead of added.",
         req: ["l3_6"],
         isBool: true,
         disp(x) { return ""; },
         costType: "loot",
-        cost(x) { return EN("e16000"); },
+        cost(x) { return EN(1e265); },
+    },
+    "lk": {
+        category: "Abilities",
+        title: "Killing Spree II",
+        desc: "Gain some loot when you kill an enemy.",
+        isBool: true,
+        req: ["l3_4"],
+        disp(x) { return format(this.effect(x));},
+        costType: "loot",
+        cost(x) { return EN(1e90) },
+		effect(x) { 
+        let gain = upgEffect("l2_1").mul(upgEffect("l2_2")).pow(0.4).mul(upgEffect("l2")).mul(upgEffect("f3")).mul(upgEffect("b2"));
+        if (game.upgrades.f3_1) gain = gain.mul(upgEffect("f1_1"));
+        if (game.upgrades.f3_2) gain = gain.mul(upgEffect("f1_2"));
+        if (game.upgrades.pow3) gain = gain.mul(upgEffect("pow1"));
+        if (game.upgrades.pow13) gain = gain.mul(game.misc.powerRitual);
+		return gain; },
+    },
+    "ll": {
+        category: "Abilities",
+        title: "Looting Spree II",
+        desc: "When you gain loot, raise your power to the power of displayed value of the loot.",
+        isBool: true,
+        req: ["f2", 111],
+        tease: "Unlocks at Realm Level 112",
+        teaseReq: ["lk"],
+        disp(x) { return ""; },
+        costType: "loot",
+        cost(x) { return EN(1e150) },
     },
     
     "b1": {
         category: "Fame",
         title: "Bricks to Fame",
-        desc: "Raises Fame gain by ^1.5, compounding.",
+        desc: "Increase Fame gain by ^+0.01, additively.",
         disp(x) { return "^" + format(this.effect(x)); },
         costType: "bricks",
-        cost(x) { return EN(20).add(EN.mul(10, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 20, 10, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 20, 10, x) },
-        effect(x) { return EN.pow(1.5, x); },
+        cost(x) { return EN(20).mul(EN.pow(1.5, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 20, 1.5, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 20, 1.5, x) },
+        effect(x) { return EN.mul(0.01, x).add(1); },
     },
     "b2": {
         category: "Loot",
@@ -288,142 +833,152 @@ let upgrades = {
         desc: "Increase Loot gain by ×1.5, compounding.",
         disp(x) { return "×" + format(this.effect(x)); },
         costType: "bricks",
-        cost(x) { return EN(20).add(EN.mul(10, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 20, 10, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 20, 10, x) },
+        cost(x) { return EN(25).mul(EN.pow(1.5, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 25, 1.5, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 25, 1.5, x) },
         effect(x) { return EN.pow(1.5, x); },
     },
     "b3": {
         category: "Bricks",
         title: "Brick Power",
-        desc: "^x of log(log(Power)) multiplies Brick gain.",
-        max: EN(40),
-        disp(x) { return "^" + format(this.effect(x)); },
+        desc: "^x of log(log(Power)) multiplies Brick gain, softcapped at ee1000 Power, hardcapped at eee300 power.",
+        disp(x) { 
+		if(game.power.gte("ee1000")){
+			let lllpower=game.power.log10().log10().log10();
+			let effective=lllpower.pow(5).div(243).mul(1000).min(1e13).pow(this.effect(x));
+			if(game.power.gte("eee300"))return "^" + format(effective.log10().div(lllpower), 4) + " (hardcapped)";
+			return "^" + format(effective.log10().div(lllpower), 4) + " (softcapped)";
+		}
+			return "^" + format(this.effect(x), 4);
+		},
         costType: "bricks",
         cost(x) { return EN(100).mul(EN.pow(1.1, x)); },
         inv(x, y) { return EN.affordGeometricSeries(y, 100, 1.1, x) },
         invSum(x, y) { return EN.sumGeometricSeries(y, 100, 1.1, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        effect(x) { return EN.mul(0.2, x.sqrt()); },
     },
     "b3_1": {
         category: "Bricks",
         title: "Brick Power II",
         desc: "^x of Realm Level multiplies Brick gain.",
-        max: EN(40),
-        disp(x) { return "^" + format(this.effect(x)); },
+        req: ["f2", 103],
+        tease: "Unlocks at Realm Level 104",
+        disp(x) { return "^" + format(this.effect(x), 4); },
         costType: "bricks",
-        cost(x) { return EN(100000).mul(EN.pow(1.2, x)); },
-        inv(x, y) { return EN.affordGeometricSeries(y, 100000, 1.2, x) },
-        invSum(x, y) { return EN.sumGeometricSeries(y, 100000, 1.2, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        cost(x) { return EN(1000).mul(EN.pow(1.2, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 1000, 1.2, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 1000, 1.2, x) },
+        effect(x) { return EN.mul(0.1, x.pow(game.upgrades.pow11?.6:.5)); },
     },
     "b3_2": {
         category: "Bricks",
-        title: "Fame to Brick",
+        title: "Brick Power III",
         desc: "^x of log(log(log(Fame))) multiplies Brick gain.",
-        max: EN(100),
-        req: ["f2", 203],
-        tease: "Unlocks at Realm Level 204",
-        disp(x) { return "^" + format(this.effect(x)); },
+        req: ["f2", 119],
+        tease: "Unlocks at Realm Level 120",
+        disp(x) { return "^" + format(this.effect(x), 4); },
         costType: "bricks",
-        cost(x) { return EN(5e9).mul(EN.pow(2, x)); },
-        inv(x, y) { return EN.affordGeometricSeries(y, 5e9, 2, x) },
-        invSum(x, y) { return EN.sumGeometricSeries(y, 5e9, 2, x) },
-        effect(x) { return EN.mul(0.1, x); },
+        cost(x) { return EN(1e50).mul(EN.pow(2, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 1e50, 2, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 1e50, 2, x) },
+        effect(x) { return EN.mul(1, x.sqrt()); },
     },
     "b3_3": {
         category: "Bricks",
         title: "Loot to Brick",
         desc: "^x of log(log(Loot)) multiplies Brick gain.",
-        max: EN(100),
-        req: ["f2", 203],
-        disp(x) { return "^" + format(this.effect(x)); },
+        req: ["f2", 119],
+        disp(x) { return "^" + format(this.effect(x), 4); },
         costType: "bricks",
-        cost(x) { return EN(5e9).mul(EN.pow(2, x)); },
-        inv(x, y) { return EN.affordGeometricSeries(y, 5e9, 2, x) },
-        invSum(x, y) { return EN.sumGeometricSeries(y, 5e9, 2, x) },
-        effect(x) { return EN.mul(0.1, x); },
+        cost(x) { return EN(1e50).mul(EN.pow(2, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 1e50, 2, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 1e50, 2, x) },
+        effect(x) { return EN.mul(0.3, x.sqrt()); },
     },
     "b3_4": {
         category: "Bricks",
         title: "Fame Exp. to Brick",
         desc: "^x of Fame Exponent multiplies Brick gain.",
-        max: EN(20),
-        req: ["b4", 20],
-        tease: "Unlocks at ^1.00 of Absorb Bonus II",
-        teaseReq: ["f2", 199],
-        disp(x) { return "^" + format(this.effect(x)); },
+        req: ["f2", 105],
+        tease: "Unlocks at Realm Level 106",
+        disp(x) { return "^" + format(this.effect(x), 4); },
         costType: "bricks",
         cost(x) { return EN(1e10).mul(EN.pow(2, x)); },
         inv(x, y) { return EN.affordGeometricSeries(y, 1e10, 2, x) },
         invSum(x, y) { return EN.sumGeometricSeries(y, 1e10, 2, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        effect(x) { return EN.mul(0.2, x.sqrt()); },
     },
     "b3_5": {
         category: "Bricks",
         title: "Fame Exp. to Brick II",
         desc: "^x of Fame Exponent II multiplies Brick gain.",
-        max: EN(20),
-        req: ["b4", 20],
-        disp(x) { return "^" + format(this.effect(x)); },
+        req: ["f2", 106],
+        tease: "Unlocks at Realm Level 107",
+        teaseReq: ["f2", 105],
+        disp(x) { return "^" + format(this.effect(x), 4); },
         costType: "bricks",
         cost(x) { return EN(1e10).mul(EN.pow(2, x)); },
         inv(x, y) { return EN.affordGeometricSeries(y, 1e10, 2, x) },
         invSum(x, y) { return EN.sumGeometricSeries(y, 1e10, 2, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        effect(x) { return EN.mul(0.3, x.sqrt()); },
     },
     "b3_6": {
         category: "Bricks",
         title: "Base Loot to Brick",
-        desc: "^x of Base Loot multiplies Brick gain.",
-        max: EN(20),
-        req: ["f2", 233],
-        tease: "Unlocks at Realm Level 234",
+        desc: "^x of Base Loot multiplies Brick gain. Softcapped at 1e10000 Base Loot.",
+        req: ["f2", 120],
+        tease: "Unlocks at Realm Level 121",
         teaseReq: ["b4", 20],
-        disp(x) { return "^" + format(this.effect(x)); },
+        disp(x) { 
+		if(upgEffect("l2_1").gte("1e10000")){
+			let b=upgEffect("l2_1").log10().log10();
+			let effective=b.mul(2.5).pow(10000).pow(this.effect(x));
+			return "^" + format(effective.log10().div(EN(10).pow(b)), 4) + " (softcapped)";
+		}
+		return "^" + format(this.effect(x), 4); },
         costType: "bricks",
         cost(x) { return EN(1e80).mul(EN.pow(1e10, x)); },
         inv(x, y) { return EN.affordGeometricSeries(y, 1e80, 1e10, x) },
         invSum(x, y) { return EN.sumGeometricSeries(y, 1e80, 1e10, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        effect(x) { return EN.mul(0.01, x.sqrt()); },
     },
     "b3_7": {
         category: "Bricks",
         title: "Random Loot to Brick",
         desc: "^x of Random Loot multiplies Brick gain.",
-        max: EN(20),
-        req: ["f2", 233],
-        disp(x) { return "^" + format(this.effect(x)); },
+        req: ["f2", 120],
+        disp(x) { return "^" + format(this.effect(x), 4); },
         costType: "bricks",
         cost(x) { return EN(1e80).mul(EN.pow(1e10, x)); },
         inv(x, y) { return EN.affordGeometricSeries(y, 1e80, 1e10, x) },
         invSum(x, y) { return EN.sumGeometricSeries(y, 1e80, 1e10, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        effect(x) { return EN.mul(0.1, x); },
     },
     "b4": {
         category: "Abilities",
         title: "Absorb Bonus II",
         desc: "Gain an extra ^x of enemies' Power when killed.",
-        req: ["f2", 199],
-        tease: "Unlocks at Realm Level 200",
+        req: ["f2", 107],
+        tease: "Unlocks at Realm Level 108",
         disp(x) { return "^" + format(this.effect(x)); },
         costType: "bricks",
-        cost(x) { return EN(1e9).mul(EN.pow(1.1, x)); },
-        inv(x, y) { return EN.affordGeometricSeries(y, 1e9, 1.1, x) },
-        invSum(x, y) { return EN.sumGeometricSeries(y, 1e9, 1.1, x) },
-        effect(x) { return EN.mul(0.05, x); },
+        cost(x) { return EN(1e20).mul(EN.pow(1.5, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 1e20, 1.5, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 1e20, 1.5, x) },
+        effect(x) { 
+        if (game.upgrades.pow15) return EN.pow(5, x);
+		return EN.mul(0.01, x);
+		},
     },
     "b4_1": {
         category: "Abilities",
         title: "Free Loot Upgrades",
         desc: "Loot Upgrades are no longer priced.",
-        req: ["f2", 233],
-        tease: "Unlocks at Realm Level 234",
-        teaseReq: ["b4", 20],
+        req: ["b4", 1],
         isBool: true,
         disp(x) { return ""; },
         costType: "bricks",
-        cost(x) { return EN(1e96); },
+        cost(x) { return EN(1e25); },
     },
     "b4_2": {
         category: "Abilities",
@@ -433,20 +988,129 @@ let upgrades = {
         isBool: true,
         disp(x) { return ""; },
         costType: "bricks",
-        cost(x) { return EN(1e98); },
+        cost(x) { return EN("1e11111"); },
     },
     "b4_3": {
         category: "Abilities",
         title: "WARNING: The Ritual",
         desc: "Unlocks The Grimoire and The Ritual, which allows you to \"reborn\".",
-        req: ["f2", 235],
-        tease: "Unlocks at Realm Level 236",
-        teaseReq: ["f2", 233],
+        req: ["b4", 1],
         isBool: true,
         disp(x) { return ""; },
         costType: "bricks",
-        cost(x) { return EN(1e106); },
+        cost(x) { return EN(1e30); },
     },
+    "b4_4": {
+        category: "Abilities",
+        title: "Realm Compressor",
+        desc: "Multiply effective realm level by x%.",
+        req: ["b4_3"],
+        disp(x) { return format(this.effect(x).pow(-1).mul(100), 4)+"%"; },
+        costType: "bricks",
+        cost(x) { return EN(1e31).mul(EN.pow(10, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 1e31,10, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 1e31,10, x) },
+        effect(x) { 
+			if(x.gte(100))x=x.sqrt().mul(10);
+			if(x.gte(1000))x=x.log10().mul(1000/3);
+			if(x.gte(3000))x=x.div(3).log10().mul(1000);
+			let ret=EN.pow(1.01, x);
+			if(game.upgrades.pow19)ret=ret.sqrt();
+			if(game.upgrades.pow20)ret=ret.sqrt();
+			return ret;
+		},
+    },
+    "bk": {
+        category: "Abilities",
+        title: "Killing Spree III",
+        desc: "Gain 10% of brick gain per tower cell when you kill an enemy.",
+        isBool: true,
+        req: ["b4_3"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN.pow(10,100/3) },
+    },
+    "bl": {
+        category: "Abilities",
+        title: "Looting Spree III",
+        desc: "Gain 100% of brick gain per tower cell when you gain loot.",
+        isBool: true,
+        req: ["f2", 108],
+        tease: "Unlocks at Realm Level 109",
+        teaseReq: ["bk"],
+        disp(x) { return ""; },
+        costType: "bricks",
+        cost(x) { return EN.pow(10,110/3) },
+    },
+    "b5": {
+        category: "Grimoire",
+        title: "Fame Ritual",
+        desc: "Unlock another ritual.",
+        isBool: true,
+        req: ["f2", 108],
+        tease: "Unlocks at Realm Level 109",
+        teaseReq: ["b4_3"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN(1e40) },
+    },
+    "b5_1": {
+        category: "Grimoire",
+        title: "Loot Ritual",
+        desc: "Unlock another ritual.",
+        isBool: true,
+        req: ["f2", 112],
+        tease: "Unlocks at Realm Level 113",
+        teaseReq: ["b5"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN(1e60) },
+    },
+    "b5_2": {
+        category: "Grimoire",
+        title: "Mana Ritual",
+        desc: "Unlock another ritual.",
+        isBool: true,
+        req: ["f2", 114],
+        tease: "Unlocks at Realm Level 115",
+        teaseReq: ["b5_1"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN(1e68) },
+    },
+    "b5_3": {
+        category: "Grimoire",
+        title: "Power Ritual S",
+        desc: "Power Ritual doesn't reset anything, and Automatically Power Ritual.",
+        isBool: true,
+        req: ["f2", 149],
+        tease: "Unlocks at Realm Level 150",
+        teaseReq: ["b5_2"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN("1e400") },
+    },
+    "b5_4": {
+        category: "Grimoire",
+        title: "Fame Ritual S",
+        desc: "Fame Ritual doesn't reset anything, and Automatically Fame Ritual.",
+        isBool: true,
+        req: ["b5_3"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN("1e600") },
+    },
+    "b5_5": {
+        category: "Grimoire",
+        title: "Loot Ritual S",
+        desc: "Loot Ritual doesn't reset anything, and Automatically Loot Ritual.",
+        isBool: true,
+        req: ["b5_4"],
+        disp(x) { return "";},
+        costType: "bricks",
+        cost(x) { return EN("1e800") },
+    },
+    
     
     "m1": {
         category: "Karma",
@@ -454,9 +1118,9 @@ let upgrades = {
         desc: "Gain x×sqrt(Realm Level) Karma on level complete.",
         disp(x) { return "×" + format(this.effect(x), 0); },
         costType: "mana",
-        cost(x) { return EN(2).add(EN.mul(10, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 2, 10, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 2, 10, x) },
+        cost(x) { return EN(1).add(EN.mul(10, x)); },
+        inv(x, y) { return EN.affordArithmeticSeries(y, 1, 10, x) },
+        invSum(x, y) { return EN.sumArithmeticSeries(y, 1, 10, x) },
         effect(x) { return x; },
     },
     "m1_1": {
@@ -468,7 +1132,7 @@ let upgrades = {
         cost(x) { return EN(2).add(EN.mul(10, x)); },
         inv(x, y) { return EN.affordArithmeticSeries(y, 2, 10, x) },
         invSum(x, y) { return EN.sumArithmeticSeries(y, 2, 10, x) },
-        effect(x) { return x.mul(0.3); },
+        effect(x) { return x; },
     },
     "m1_2": {
         category: "Karma",
@@ -499,7 +1163,7 @@ let upgrades = {
         desc: "Multiplies Tower Karma gain by x% of sqrt(Level Karma).",
         max: EN(10),
         disp(x) { return format(this.effect(x).mul(100), 0) + "%"; },
-        req: ["k3_7"],
+        req: ["k3_6", 1],
         tease: "Unlocks at Realm Level 236",
         teaseReq: ["k3_6", 1],
         costType: "mana",
@@ -531,13 +1195,13 @@ let upgrades = {
         cost(x) { return EN(1e9).add(EN.mul(1e7, x)); },
         inv(x, y) { return EN.affordArithmeticSeries(y, 1e9, 1e7, x) },
         invSum(x, y) { return EN.sumArithmeticSeries(y, 1e9, 1e7, x) },
-        effect(x) { return x.div(20).add(.1); },
+        effect(x) { return x.div(20).add(1); },
     },
     "m2": {
         category: "Elemental",
         title: "The Arts of Elements",
         desc: "Unlocks the Elemental system, which allows you to cast temporary spells.",
-        req: ["k3_11"],
+        req: ["k3_9"],
         isBool: true,
         disp(x) { return ""; },
         costType: "mana",
@@ -569,44 +1233,52 @@ let upgrades = {
     "m3": {
         category: "Abilities",
         title: "Absorb Bonus IV",
-        desc: "Multiplies Absorb Bonus III gain per upgrade by +1.",
-        disp(x) { return "+" + format(this.effect(x), 0); },
+        desc: "Multiplies Absorb Bonus III gain per upgrade.",
+        disp(x) { return "×" + format(this.effect(x).mul(1000), 3); },
         req: ["m2"],
         costType: "mana",
         cost(x) { return EN(1e9).add(EN.mul(1e7, x)); },
         inv(x, y) { return EN.affordArithmeticSeries(y, 1e9, 1e7, x) },
         invSum(x, y) { return EN.sumArithmeticSeries(y, 1e9, 1e7, x) },
-        effect(x) { return x.add(1); },
+        effect(x) { let ret = x.mul(90).add(10).log10();
+			if(ret.gte(5))ret = ret.pow(2).div(5);
+			if(ret.gte(20))ret = ret.pow(2).div(20);
+			if(ret.gte(100))ret = ret.pow(2).div(100);
+			return ret.mul(0.001); },
     },
     
     "k1": {
         category: "Boosts",
-        title: "Karma to Fame",
-        desc: "Tetrates Fame gain by ↑↑+0.01, additively.",
-        disp(x) { return "↑↑" + format(this.effect(x)); },
+        title: "Karma to Base Fame",
+        desc: "Tetrates Base Fame gain by ↑↑x, before softcaps and multipliers.",
+        disp(x) { return "↑↑" + format(this.effect(x), 3); },
         costType: "karma",
-        cost(x) { return EN(5).add(EN.mul(5, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 5, 5, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 5, 5, x) },
-        effect(x) { return x.mul(0.01).add(1); },
+        cost(x) { return EN(1).mul(EN.pow(2, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 1, 2, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 1, 2, x) },
+        effect(x) { 
+			if(x.gte(10))x=x.pow(12).div(1e11);
+			return x.mul(0.002).add(1);
+		},
     },
     "k1_1": {
         category: "Boosts",
-        title: "Karma to Loot",
-        desc: "Tetrates Loot gain by ↑↑+0.01, additively.",
+        title: "Karma to Base Loot",
+        desc: "Tetrates Base Loot by ↑↑+0.01, additively, before softcaps and multipliers.",
         req: ["k1", 1],
+        max: EN(60),
         disp(x) { return "↑↑" + format(this.effect(x)); },
         costType: "karma",
-        cost(x) { return EN(100).add(EN.mul(100, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 100, 100, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 100, 100, x) },
+        cost(x) { return EN(10).mul(EN.pow(2, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 10, 2, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 10, 2, x) },
         effect(x) { return x.mul(0.01).add(1); },
     },
     "k1_2": {
         category: "Boosts",
         title: "Karma to Brick",
         desc: "Tetrates Brick gain by ↑↑+0.01, additively.",
-        req: ["k1_1", 1],
+        req: ["k1_1", 1e200],
         disp(x) { return "↑↑" + format(this.effect(x)); },
         costType: "karma",
         cost(x) { return EN(2000).add(EN.mul(2000, x)); },
@@ -621,9 +1293,9 @@ let upgrades = {
         req: ["k3_1", 1],
         disp(x) { return "×" + format(this.effect(x)); },
         costType: "karma",
-        cost(x) { return EN(1000).mul(EN.pow(1.2, x)); },
-        inv(x, y) { return EN.affordGeometricSeries(y, 1000, 1.2, x) },
-        invSum(x, y) { return EN.sumGeometricSeries(y, 1000, 1.2, x) },
+        cost(x) { return EN(100).mul(EN.pow(1.5, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 100, 1.5, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 100, 1.5, x) },
         effect(x) { return x.mul(0.25).add(1); },
     },
     "k1_4": {
@@ -643,31 +1315,31 @@ let upgrades = {
         category: "Automation",
         title: "Auto Fame Upgrades",
         desc: "Automatically buy Fame upgrades when you gain Fame.",
-        req: ["k3_1", 1],
+        req: ["l3_5"],
         isBool: true,
         disp(x) { return ""; },
-        costType: "karma",
-        cost(x) { return EN(1000); },
+        costType: "loot",
+        cost(x) { return EN(1e80); },
     },
     "k2_1": {
         category: "Automation",
         title: "Auto Loot Upgrades",
         desc: "Automatically buy Loot upgrades when you gain Loot.",
-        req: ["k2"],
+        req: ["b4_1"],
         isBool: true,
         disp(x) { return ""; },
-        costType: "karma",
-        cost(x) { return EN(3000); },
+        costType: "bricks",
+        cost(x) { return EN(1e28); },
     },
     "k2_2": {
         category: "Automation",
         title: "Auto Brick Upgrades",
         desc: "Automatically buy Brick upgrades when you gain Bricks.",
-        req: ["k2_1"],
+        req: ["k3_3"],
         isBool: true,
         disp(x) { return ""; },
-        costType: "karma",
-        cost(x) { return EN(9000); },
+        costType: "bricks",
+        cost(x) { return EN(1e60); },
     },
     "k2_3": {
         category: "Automation",
@@ -677,7 +1349,7 @@ let upgrades = {
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
-        cost(x) { return EN(1e84); },
+        cost(x) { return EN(1e55); },
     },
     "k2_4": {
         category: "Automation",
@@ -687,7 +1359,7 @@ let upgrades = {
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
-        cost(x) { return EN("e1850"); },
+        cost(x) { return EN(1e70); },
     },
     "k3": {
         category: "Abilities",
@@ -725,45 +1397,45 @@ let upgrades = {
         category: "Abilities",
         title: "Free Brick Upgrades",
         desc: "Brick Upgrades are no longer priced.",
-        req: ["k2_1"],
+        req: ["bl"],
         isBool: true,
         disp(x) { return ""; },
-        costType: "karma",
-        cost(x) { return EN(5000); },
+        costType: "bricks",
+        cost(x) { return EN(1e55); },
     },
     "k3_4": {
         category: "Abilities",
         title: "Free Fame Upgrades II",
-        desc: "Keep \"Free Fame Upgrades\" on Mana Rituals.",
+        desc: "Keep \"Free Fame Upgrades\" and \"Auto Fame Upgrades\" on Rituals.",
         req: ["k3_3"],
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
-        cost(x) { return EN(25000); },
-        onBuy(x) { game.upgrades.l3_5 = true; }
+        cost(x) { return EN(1000); },
+        onBuy(x) { game.upgrades.l3_5 = true;game.upgrades.k2 = true; }
     },
     "k3_5": {
         category: "Abilities",
         title: "Absorb Bonus III",
-        desc: "Gain an extra ↑↑x of Power when you kill an enemy.",
-        req: ["k1_3", 16],
-        tease: "Unlocks at Karma to Mana ×5",
+        desc: "Add x to the slog of Power of the enemy before absorbing.",
+        req: ["k1_3", 12],
+        tease: "Unlocks at Karma to Mana ×4",
         teaseReq: ["k3_1", 1],
-        disp(x) { return "↑↑" + format(this.effect(x), 0); },
+        disp(x) { return "+" + format(this.effect(x), 3); },
         costType: "karma",
-        cost(x) { return EN(500000).mul(EN.pow(2, x)); },
-        inv(x, y) { return EN.affordGeometricSeries(y, 500000, 2, x) },
-        invSum(x, y) { return EN.sumGeometricSeries(y, 500000, 2, x) },
-        effect(x) { return x.mul(upgEffect("m3")).add(1); },
+        cost(x) { return EN(10000).mul(EN.pow(3, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 10000, 3, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 10000, 3, x) },
+        effect(x) { if(x.gte(150))x=x.pow(2).div(150);if(x.gte(30))x=x.pow(2).div(30);if(x.gte(10))x=x.pow(4).div(1000);return x.pow(2).mul(upgEffect("m3")); },
     },
     "k3_6": {
         category: "Abilities",
         title: "Enemy Absorb Factor II",
-        desc: "x% of Absorb Bonus III (min. ↑↑2) affects enemy growth.",
-        max: EN(99),
+        desc: "x% of Absorb Bonus III affects enemy growth.",
+        max: EN(50),
         req: ["k3_5", 4],
-        tease: "Unlocks at Absorb Bonus II ↑↑5",
-        teaseReq: ["k1_3", 16],
+        tease: "Unlocks at Absorb Bonus III +0.016",
+        teaseReq: ["k1_3", 12],
         disp(x) { return format(this.effect(x), 0) + "%"; },
         costType: "karma",
         cost(x) { return EN(2500000).mul(EN.pow(3, x)); },
@@ -773,49 +1445,39 @@ let upgrades = {
     },
     "k3_7": {
         category: "Abilities",
-        title: "Enemy Absorb Bonus",
-        desc: "Apply Karma boost upgrades to enemy growth.",
+        title: "Power Milestone Keeper",
+        desc: "Keep Power Milestones on Rituals.",
         req: ["k3_6", 1],
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
-        cost(x) { return EN(7500000); },
+        cost(x) { return EN(1e7); },
     },
     "k3_8": {
         category: "Abilities",
         title: "Free Loot Upgrades II",
-        desc: "Keep \"Free Loot Upgrades\" on Mana Rituals.",
+        desc: "Keep \"Free Loot Upgrades\" and \"Auto Loot Upgrades\" on Rituals.",
         req: ["k3_7"],
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
         cost(x) { return EN(75000000); },
-        onBuy(x) { game.upgrades.b4_1 = true; }
+        onBuy(x) { game.upgrades.b4_1 = true;game.upgrades.k2_1 = true;  }
     },
     "k3_9": {
         category: "Abilities",
-        title: "Karma to Loot to Fame",
-        desc: "Your Fame is tetrated by Karma to Loot and Base Loot amount when you gain Loot.",
+        title: "Karma to Base Loot to Power",
+        desc: "Your Power is tetrated by Karma to Base Loot when you gain Loot.",
         req: ["k3_8"],
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
         cost(x) { return EN(1000000000); },
-    },
-    "k3_10": {
-        category: "Abilities",
-        title: "Karma to Loot to Power",
-        desc: "Karma to Loot to Power also affect Power and enemy growth.",
-        req: ["k3_9"],
-        isBool: true,
-        disp(x) { return ""; },
-        costType: "karma",
-        cost(x) { return EN(10000000000); },
-    },
+    },/*
     "k3_11": {
         category: "Abilities",
         title: "Karma to Loot to Bricks",
-        desc: "Karma to Loot to Power also affect Bricks.",
+        desc: "Karma to Base Loot to Power also affect Bricks.",
         req: ["k3_9"],
         isBool: true,
         disp(x) { return ""; },
@@ -831,7 +1493,7 @@ let upgrades = {
         disp(x) { return ""; },
         costType: "karma",
         cost(x) { return EN(250000000000); },
-    },
+    },*/
     "k3_13": {
         category: "Abilities",
         title: "Free Mana Upgrades",
@@ -852,7 +1514,7 @@ let upgrades = {
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
-        cost(x) { return EN(1e252); },
+        cost(x) { return EN(1e60); },
     },
     "k3_15": {
         category: "Abilities",
@@ -862,7 +1524,7 @@ let upgrades = {
         isBool: true,
         disp(x) { return ""; },
         costType: "karma",
-        cost(x) { return EN("e756"); },
+        cost(x) { return EN(1e65); },
     },
     
     "e1": {
@@ -880,23 +1542,33 @@ let upgrades = {
         category: "Boosts",
         title: "Elemite to Mana",
         desc: "Increase Mana gain by ×1.05, compounding.",
-        disp(x) { return "×" + format(this.effect(x)); },
+        disp(x) { let ret="×" + format(this.effect(x));
+return ret + (this.effect(x).gte(1e100)?" (softcapped^2)":this.effect(x).gte(1e40)?" (softcapped)":"")		},
         costType: "elemite",
-        cost(x) { return EN(50).add(EN.mul(10, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 50, 10, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 50, 10, x) },
-        effect(x) { return EN.pow(upgEffect("e1_5"), x); },
+        cost(x) { return EN(100).mul(EN.pow(1.1, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 100, 1.1, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 100, 1.1, x) },
+        effect(x) { 
+		let ret=EN.pow(upgEffect("e1_5"), x);
+		if(ret.gte(1e40))ret=EN.pow(10,ret.log10().div(40).pow(0.5).mul(40));
+		if(ret.gte(1e100))ret=EN.pow(10,ret.log10().log10().pow(2).mul(25));
+		return ret; },
     },
     "e1_2": {
         category: "Boosts",
         title: "Elemite to Karma",
         desc: "Increase Karma gain by ×1.05, compounding.",
-        disp(x) { return "×" + format(this.effect(x)); },
+        disp(x) { let ret="×" + format(this.effect(x));
+return ret + (this.effect(x).gte(1e100)?" (softcapped^2)":this.effect(x).gte(1e40)?" (softcapped)":"")		},
         costType: "elemite",
-        cost(x) { return EN(50).add(EN.mul(10, x)); },
-        inv(x, y) { return EN.affordArithmeticSeries(y, 50, 10, x) },
-        invSum(x, y) { return EN.sumArithmeticSeries(y, 50, 10, x) },
-        effect(x) { return EN.pow(upgEffect("e1_5"), x); },
+        cost(x) { return EN(100).mul(EN.pow(1.1, x)); },
+        inv(x, y) { return EN.affordGeometricSeries(y, 100, 1.1, x) },
+        invSum(x, y) { return EN.sumGeometricSeries(y, 100, 1.1, x) },
+        effect(x) { 
+		let ret=EN.pow(upgEffect("e1_5"), x);
+		if(ret.gte(1e40))ret=EN.pow(10,ret.log10().div(40).pow(0.5).mul(40));
+		if(ret.gte(1e100))ret=EN.pow(10,ret.log10().log10().pow(2).mul(25));
+		return ret; },
     },
     "e1_3": {
         category: "Boosts",
@@ -987,7 +1659,7 @@ let upgrades = {
         effect(x) { return x.mul(0.01).add(x.gt(0) ? .04 : 0); },
     },
     
-    "e2": {
+    /* "e2": {
         category: "Elemental",
         title: "Spell of Fire+",
         desc: "Increase effect by ×+0.1, but also increase cost by ×1.1.",
@@ -997,7 +1669,7 @@ let upgrades = {
         invSum(x, y) { return EN.sumGeometricSeries(y, 100, 1.12, x) },
         inv(x, y) { return EN.affordGeometricSeries(y, 100, 1.12, x) },
         effect(x) { return x.mul(0.1).add(2); },
-    },
+    },*/
     "e2_1": {
         category: "Elemental",
         title: "Spell of Ice+",
@@ -1032,7 +1704,7 @@ let upgrades = {
         inv(x, y) { return EN.affordGeometricSeries(y, 100, 1.12, x) },
         effect(x) { return x.toNumber() + 10; },
     },
-    "e2_4": {
+    /*"e2_4": {
         category: "Elemental",
         title: "Spell of Fire S",
         desc: "Decrease cooldown by -1, but also increase cost by ×1.2.",
@@ -1044,7 +1716,7 @@ let upgrades = {
         invSum(x, y) { return EN.sumGeometricSeries(y, 1000, 5, x) },
         inv(x, y) { return EN.affordGeometricSeries(y, 1000, 5, x) },
         effect(x) { return 10 - x.toNumber(); },
-    },
+    },*/
     "e2_5": {
         category: "Elemental",
         title: "Spell of Ice S",
@@ -1101,7 +1773,7 @@ let upgrades = {
         category: "Abilities",
         title: "The Rift",
         desc: "Unlocks the Rift.",
-        req: ["k2_4"],
+        req: ["k2_3"],
         isBool: true,
         disp(x) { return ""; },
         costType: "elemite",

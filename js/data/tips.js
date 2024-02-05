@@ -19,16 +19,16 @@ let tips = [
     {
         title: "You Have Absorb Powers",
         desc: "You gain all the Power of all defeated enemies.",
-        desc2: "(Defeat all remaining reds to continue. You can only go to the next tower when your current tower is cleared.)",
+        desc2: "(Defeat all remaining reds to continue. You can only go to the next tower when your current tower is cleared. In this version, if you died, you keep your power.)",
         req() { 
             let pPos = getPlayerPos();
-            return getTile(pPos)[0][1].gt(10);
+            return getTile(pPos)[0][1].gt(1);
         }
     },
     {
         title: "Level Completed!",
         desc: "Each level you beaten will award you with Fame. The more Power you have at the end, the more Fame you'll get.",
-        desc2: "(Accumulate 1,500 Fame to unlock something)",
+        desc2: "(Accumulate 1,500 Fame to unlock something. In this version, if you completed a level, you keep your power.)",
         req() { 
             return game.pointsTotal.gt(0);
         }
@@ -36,7 +36,7 @@ let tips = [
     {
         title: "Fame Upgrades Unlocked!",
         desc: "What even is a game without upgrades? Use your Fame to unlock upgrades that, in turn, help you make more Fame!",
-        desc2: "(You can now click this box to dismiss it)",
+        desc2: "(You can now click this box to dismiss it.)",
         disClick: true,
         req() { 
             return game.pointsTotal.gte(1500);
@@ -80,11 +80,11 @@ let tips = [
     },
     {
         title: "F Notation?",
-        desc: "You Fame has gone so big it needs to be expresed into a different notation!\n1Fx means 1ee...ee1 with x e's.",
+        desc: "You Power has gone so big it needs to be expresed into a different notation!\n1Fx means 1ee...ee1 with x e's.",
         desc2: "(Click this box to dismiss)",
         disClick: true,
         req() { 
-            return game.pointsTotal.gte("10^^5");
+            return game.powerTotal.gte("10^^5");
         }
     },
     {

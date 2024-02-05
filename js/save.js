@@ -2,6 +2,8 @@ let game = {}
 
 function getStartGame() {
     let start = {
+        power: EN(1),
+        powerTotal: EN(1),
         points: EN(0),
         pointsTotal: EN(0),
         loot: EN(0),
@@ -25,6 +27,7 @@ function getStartGame() {
         spells: {},
 
         auto: {
+			lootGenSwitch: true,
         },
 
         rift: 0,
@@ -32,6 +35,9 @@ function getStartGame() {
         playTime: 0,
 
         misc: {
+            powerRitual: EN(1),
+            fameRitual: EN(1),
+            lootRitual: EN(1),
             elemiteMul: EN(1),
         },
 

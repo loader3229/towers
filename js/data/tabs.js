@@ -10,6 +10,9 @@ let tabs = {
             points: {
                 title: "Fame",
             },
+            power: {
+                title: "Power",
+            },
             loot: {
                 title: "Loot",
             },
@@ -85,14 +88,18 @@ let tabs = {
         }
     },
     auto: {
-        title: "Automation",
+        title: "Automation/Switches",
         content: `
             <div class="upgcategory" id="autocontrol">
                 <div>Automation Control</div>
             </div>
+            <div class="upgcategory" id="switches_c">
+                <div>Switches</div>
+            </div>
         `,
         onshow() {
             let autocontrol = document.getElementById("autocontrol");
+            let switches_c = document.getElementById("switches_c");
             let btns = {};
             for (let auto in autos) {
                 let data = autos[auto];
@@ -106,7 +113,7 @@ let tabs = {
                     btn.innerHTML = "<div>" + data.title + "</div><div>" + (game.auto[auto] ? "ON" : "OFF") + "</div>";
                 }
 
-                autocontrol.appendChild(btn);
+                (data.sw?switches_c:autocontrol).appendChild(btn);
                 btns[auto] = btn;
             }
         }
