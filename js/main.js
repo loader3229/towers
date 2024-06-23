@@ -112,7 +112,7 @@ function init() {
         elemitebox.innerHTML = format(game.elemite, 0);
         elemitebox.classList.remove("hidden");
     }
-    if (game.pointsTotal.gte(1500)) menu.classList.remove("hidden");
+    menu.classList.remove("hidden");
 
     now = Date.now();
     gameLoop();
