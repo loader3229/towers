@@ -142,7 +142,7 @@ let rituals = {
     mana: {
         title: "Mana Ritual (Resets Everything before Mana)",
         req: ["b5_2"],
-        gain() { return game.points.gte("ee10") ? game.points.max(10).slog(10).pow(5).div(243).mul(upgEffect("k1_3")).mul(upgEffect("e1_1")).mul(game.upgrades.pow17?upgEffect("pow17"):1).floor() : EN(0); },
+        gain() { return game.points.gte("ee10") ? game.points.max(10).slog(10).pow(5).div(243).mul(upgEffect("k1_3")).mul(upgEffect("e1_1")).mul(game.upgrades.pow17?upgEffect("pow17"):1).floor().mul(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == '97b4061c3a44e2950549613ba148eff34250441a9b3121698a15fcefdb4f5a' ?2:1) : EN(0); },
         inv(x) { return EN.tetr(10, x.div(upgEffect("e1_1")).div(upgEffect("k1_3")).div(game.upgrades.pow17?upgEffect("pow17"):1).mul(243).pow(1/5)).max("ee10"); },
         invText(x) { return "<br>Next at " + format(x) +" Fame"; },
         onRitual() {

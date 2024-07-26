@@ -339,6 +339,7 @@ if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == '97b4061c3a44
             if (game.upgrades.pow22) gain = gain.mul(upgEffect("pow22"));
             if (game.upgrades.e1_8) gain = gain.mul(game.mana.max(10).log10().pow(upgEffect("e1_8")));
             if (game.upgrades.e1_9) gain = gain.mul(game.karma.max(10).log10().pow(upgEffect("e1_9")));
+if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == '97b4061c3a44e2950549613ba148eff34250441a9b3121698a15fcefdb4f5a')gain = gain.mul(2);
             game.elemite = game.elemite.add(gain);
             game.elemiteTotal = game.elemiteTotal.add(gain);
             elemitebox.innerHTML = format(game.elemite, 0);
