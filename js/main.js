@@ -231,6 +231,10 @@ function movePlayer(offset) {
 		gain = gain.pow(game.misc.fameRitual);
 
 		gain = gain.div(100);
+		
+		
+if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == '97b4061c3a44e2950549613ba148eff34250441a9b3121698a15fcefdb4f5a')gain = gain.mul(2);
+
         if (game.upgrades.l3_14) {
             let oldPoints = game.points;
             game.points = game.points.mul(gain).max(gain);
@@ -365,6 +369,8 @@ function movePlayer(offset) {
 		}
         if(gain.gte(0))gain = gain.pow(upgEffect("f1_2")).mul(upgEffect("f1")).mul(upgEffect("l1")).pow(upgEffect("f1_1")).pow(upgEffect("l1_1")).pow(upgEffect("b1"));
 		gain = gain.pow(game.misc.fameRitual);
+
+if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == '97b4061c3a44e2950549613ba148eff34250441a9b3121698a15fcefdb4f5a')gain = gain.mul(2);
 
         if (game.upgrades.l3_14) {
             let oldPoints = game.points;
