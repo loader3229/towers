@@ -233,7 +233,7 @@ function movePlayer(offset) {
 		gain = gain.div(100);
 		
 		
-if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == 'window.supporterCodeInput')gain = gain.mul(2);
+if(window.supporterCodeInput)gain = gain.mul(2);
 
         if (game.upgrades.l3_14) {
             let oldPoints = game.points;
@@ -339,7 +339,7 @@ if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == 'window.suppo
             if (game.upgrades.pow22) gain = gain.mul(upgEffect("pow22"));
             if (game.upgrades.e1_8) gain = gain.mul(game.mana.max(10).log10().pow(upgEffect("e1_8")));
             if (game.upgrades.e1_9) gain = gain.mul(game.karma.max(10).log10().pow(upgEffect("e1_9")));
-if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == 'window.supporterCodeInput')gain = gain.mul(2);
+if(window.supporterCodeInput)gain = gain.mul(2);
             game.elemite = game.elemite.add(gain);
             game.elemiteTotal = game.elemiteTotal.add(gain);
             elemitebox.innerHTML = format(game.elemite, 0);
@@ -371,7 +371,7 @@ if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == 'window.suppo
         if(gain.gte(0))gain = gain.pow(upgEffect("f1_2")).mul(upgEffect("f1")).mul(upgEffect("l1")).pow(upgEffect("f1_1")).pow(upgEffect("l1_1")).pow(upgEffect("b1"));
 		gain = gain.pow(game.misc.fameRitual);
 
-if(sha512_256(localStorage.supporterCode+"loader3229").slice(2) == 'window.supporterCodeInput')gain = gain.mul(2);
+if(window.supporterCodeInput)gain = gain.mul(2);
 
         if (game.upgrades.l3_14) {
             let oldPoints = game.points;
